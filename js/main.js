@@ -17,37 +17,66 @@ function doStuff() {
     var w = img.width,
         h = img.height,
         curves,
-        bottom = false,
+        invert = true,
+        axis = 'y', //'y'
+        xInset = 0,
+        yInset = 0,
         xStart = 0,
         yStart = 0,
-        xInset = 0,
-        yInset = .2;
-  // top down
+        xEnd = 0,
+        yEnd = 0,
+        drawBefore = axis === 'x' && !invert;;
+
+  // top in bottom in
   curves = [
-    [0.49, 0.2,0.45, 0.2, 0.43, 0.28],
-[0.41, 0.32, 0.43, 0.4, 0.51, 0.4],
-[0.58, 0.4, 0.59, 0.32, 0.57, 0.27],
-[0.55, 0.2, 0.5, 0.2, 1, 0.2]
+    [0.49, 0.20, 0.45, 0.20, 0.43, 0.28],
+    [0.41, 0.32, 0.43, 0.40, 0.51, 0.40],
+    [0.58, 0.40, 0.59, 0.32, 0.57, 0.27],
+    [0.55, 0.20, 0.50, 0.20, 1.00, 0.20]
   ];
   
-  // top up
-  curvesd = [
-    [0.49, 0.2,0.45, 0.2, 0.43, 0.12],
-[0.41, 0.08, 0.43, 0.0, 0.51, 0.0],
-[0.58, 0.0, 0.59, 0.08, 0.57, 0.13],
-[0.55, 0.2, 0.5, 0.2, 1, 0.2]
+  // top out bottom out
+  curves = [
+    [0.49, 0.20, 0.45, 0.20, 0.43, 0.12],
+    [0.41, 0.08, 0.43, 0.00, 0.51, 0.00],
+    [0.58, 0.00, 0.59, 0.08, 0.57, 0.13],
+    [0.55, 0.20, 0.50, 0.20, 1.00, 0.20]
+  ];
+
+//x out
+    curves1 = [
+        [0.20, 0.49, 0.20, 0.45, 0.12, 0.43],
+        [0.08, 0.41, 0.00, 0.43, 0.00, 0.51],
+        [0.00, 0.58, 0.08, 0.59, 0.13, 0.57],
+        [0.20, 0.55, 0.20, 0.50, 0.20, 1.00]
+    ];
+// x in
+  curves1 = [
+    [0.20, 0.49, 0.20, 0.45, 0.28, 0.43],
+    [0.32, 0.41, 0.40, 0.43, 0.40, 0.51],
+    [0.40, 0.58, 0.32, 0.59, 0.27, 0.57],
+    [0.20, 0.55, 0.20, 0.50, 0.20, 1.00]
   ];
   
-  
-    if (bottom) {
-        yStart = 1;
-        yInset = .8;
+    if (axis === 'y') {
+        yInset = invert ? .8 : .2;
+        xEnd = 1;
+    }
+    if (axis === 'x') {
+        xInset = invert ? .8 : .2;
+        yEnd = 1;
+    }
+
+    if (drawBefore) {
+        ctx.drawImage(this.img, 0, 0);
+    }
+    else if (!invert) {
+        ctx.rect(0,0, canvas.width, canvas.height);
     }
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0,0, canvas.width, canvas.height);
-    ctx.moveTo(0, yStart * h);
-    ctx.lineTo(0, yInset * h);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(xInset*w, yInset*h);
     for (var i = 0; i< curves.length; i++) {
         var curve = curves[i],
             x1 = curve[0],
@@ -57,21 +86,28 @@ function doStuff() {
             x3 = curve[4],
             y3 = curve[5];
 
-    if (bottom) {
-    //       x1 = 1-x1;
-    //       x2 = 1-x2;
-    //       x3 = 1-x3;
-        y1 = 1-y1;
-        y2 = 1-y2;
-        y3 = 1-y3;
+        if (invert && axis === 'x') {
+            x1 = 1-x1;
+            x2 = 1-x2;
+            x3 = 1-x3;
+        }
+        if (invert && axis === 'y') {
+            y1 = 1-y1;
+            y2 = 1-y2;
+            y3 = 1-y3;
+        }
+        ctx.bezierCurveTo(x1*w, y1*h, x2*w, y2*h, x3*w, y3*h);
     }
-    ctx.bezierCurveTo(x1*w, y1*h, x2*w, y2*h, x3*w, y3*h);
-    }
-    ctx.lineTo(1*w, yStart * h);
+    ctx.lineTo(xEnd*w, yEnd*h);
     ctx.closePath();
     ctx.clip();
     // ctx.stroke();
-    ctx.drawImage(this.img, 0, 0);
+    if (drawBefore) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    else {
+        ctx.drawImage(this.img, 0, 0);
+    }
     ctx.restore();
 }
 

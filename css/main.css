@@ -60,6 +60,8 @@ textarea {
 canvas {
     max-width: 100%;
     max-height: 500px;
+    border: 0;
+    margin: 5px;
 }
 
 
