@@ -1,3 +1,13 @@
+(function () {
+    var puzzle = new Puzzle({
+        url: 'http://i.imgur.com/7L7KwSh.jpg'
+    });
+    puzzle.start();
+})();
+
+(function() {
+    return;
+
 var url = 'http://i.imgur.com/7L7KwSh.jpg',
     img = new Image,
     canvas = document.createElement('canvas'),
@@ -111,5 +121,4 @@ function doStuff() {
     ctx.restore();
 }
 
-
-
+})();

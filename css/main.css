@@ -65,7 +65,9 @@ canvas {
 }
 
 
-
+canvas {
+    max-width: 8%;
+}
 
 
 
