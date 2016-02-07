@@ -1,4 +1,7 @@
 /*! HTML5 Boilerplate v5.0 | MIT License | http://h5bp.com/ */
+* {
+    box-sizing: border-box;
+}
 
 html {
     color: #222;
@@ -58,19 +61,21 @@ textarea {
 
 
 canvas {
-    max-width: 100%;
+/*    max-width: 100%;
     max-height: 500px;
-    border: 0;
-    margin: 5px;
+    border: 0;*/
+    /*margin: 5px;*/
 }
 
 
 canvas {
-    max-width: 8%;
+    /*max-width: 8%;*/
 }
 
 
-
+.piece.active {
+    outline: 1px solid #bada55;
+}
 
 
 

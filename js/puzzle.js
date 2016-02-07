@@ -2,6 +2,8 @@ var Puzzle = (function () {
     var defaults = {
         pieceCount: 100
     };
+    var X_COUNT = 10,
+        Y_COUNT = 10;
 
     function fix(v, decimal) {
         return parseFloat(v).toFixed(decimal || 2);
@@ -28,14 +30,61 @@ var Puzzle = (function () {
 
     Puzzle.prototype.imageLoaded = function () {
         var self = this;
-        self.piecesX = 10; //self.image.width / 10;
-        self.piecesY = 10; //self.image.height / 10;
+        self.piecesX = X_COUNT; //self.image.width / 10;
+        self.piecesY = Y_COUNT; //self.image.height / 10;
         self.pieceW = self.image.width / self.piecesX;
         self.pieceH = self.image.height / self.piecesY;
         self.loadPieces();
 
-        self.initDraggable();
+        self.$el.css({
+            'width': self.image.width,
+            'height': self.image.height,
+            'transformOrigin': 'top left',
+            'transform': 'scale(' + ($(window).width() / self.image.width) + ')'
+        });
+        self.bindEvents();
     };
+
+    Puzzle.prototype.bindEvents = function () {
+        var LEFT = 37,
+            UP = 38,
+            RIGHT = 39,
+            DOWN = 40,
+            ALLOWEDKEYS = [LEFT, UP, RIGHT, DOWN],
+            self = this;
+
+        self.initDraggable();
+        $(window).on('click', function (ev) { 
+            console.log(ev.target);
+            if ($(ev.target).is('.piece')) {
+                var $piece = $(ev.target);
+                $piece.addClass('active').siblings().removeClass('active');
+            }
+            else {
+                $('.piece.active').removeClass('active');
+            }
+        });
+        $(window).on('keydown', function (ev) {
+            var key = ev.which,
+                $active = self.$el.find('.piece.active');
+
+            if (!$active.length) return;
+            if (ALLOWEDKEYS.indexOf(key) > -1) ev.preventDefault();
+
+            if (key === LEFT) {
+                $active.css('left', (parseInt($active.css('left'), 10) || 0) - 1);
+            }
+            if (key === RIGHT) {
+                $active.css('left', (parseInt($active.css('left'), 10) || 0) + 1);
+            }
+            if (key === UP) {
+                $active.css('top', (parseInt($active.css('top'), 10) || 0) - 1);
+            }
+            if (key === DOWN) {
+                $active.css('top', (parseInt($active.css('top'), 10) || 0) + 1);
+            }
+        });
+    }
 
     Puzzle.prototype.loadPieces = function () {
         var self = this;
@@ -77,9 +126,12 @@ var Puzzle = (function () {
                     image: self.image,
                     container: self.$el
                 });
+                // piece.$canvas.css('max-width', (100/X_COUNT) + '%');
                 row.push(piece);
+                // break;
             }
             self.pieces.push(row);
+            // break;
         }
     };
 
