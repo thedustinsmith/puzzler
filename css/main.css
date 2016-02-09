@@ -122,10 +122,20 @@ h1 {
     outline: 1px solid #bada55;
 }
 
+.puzzle-pieces .pp-inner {
+    padding: 10%;
+    transform-origin: top left;
+}
 
-
-
-
+/*
+.puzzle-pieces .pp-inner {   
+    transform: scale(0.2);
+    transform-origin: top left;
+    max-width: none;
+    width: 510%;
+    padding: 10%;
+}
+*/
 
 /* ==========================================================================
    Media Queries

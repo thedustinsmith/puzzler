@@ -19,17 +19,20 @@
             <div class="puzzle-empty">Drag Pieces Here</div>
         </div>
         <div class="puzzle-preview"><h3>Preview</h3><img src="http://placehold.it/300/300" /></div>
-        <div class="puzzle-pieces"></div>
+        <div class="puzzle-pieces"><div class="pp-inner"></div></div>
 
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
         <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
 
+        <!--<script src="js/monkeypatch-mousestart.js"></script>-->
         <script src="js/vendor/interact.js"></script>
         <script src="js/puzzle-piece-basic.js"></script>
         <script src="js/puzzle.js"></script>
         <script src="js/main.js"></script>
+
+        <script>Main.init()</script>
 
         <script>
             (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=

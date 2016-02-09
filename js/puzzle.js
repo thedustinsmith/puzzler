@@ -5,6 +5,9 @@ var Puzzle = (function () {
     var X_COUNT = 10,
         Y_COUNT = 10;
 
+    var BOARD = '<div class="puzzle-board" />',
+        MAT = '<div class="puzzle-mat" />';
+
     function fix(v, decimal) {
         return parseFloat(v).toFixed(decimal || 2);
     }
@@ -14,7 +17,8 @@ var Puzzle = (function () {
         self.url = opts.url;
         self.pieceCount = opts.pieceCount || 100;
 
-        self.$el = $('<div class="puzzleboard" />').appendTo('body');
+        self.$dropBoard = $(opts.dropBoard);
+        self.$pieceMat = $(opts.pieceMat);
     }
 
     Puzzle.prototype.start = function () {
@@ -24,8 +28,40 @@ var Puzzle = (function () {
         self.image.src = self.url;
     };
 
+
     Puzzle.prototype.initDraggable = function () { 
-        this.$el.find('canvas').draggable();
+        var self = this,
+            startX,
+            startY;
+        this.$pieceMat.find('canvas').draggable({
+            start: function (ev, ui) {
+                startY = ui.position.top;
+                startX = ui.position.left;
+            },
+            drag: function (ev, ui) {
+                var diffX = ui.position.left - startX,
+                    diffY = ui.position.top - startY;
+                ui.position.top += (diffY * self.invertedScale);
+                ui.position.left += (diffX * self.invertedScale); //startX + (self.invertedScale*ui.offset.left);
+            }
+        });
+    };
+
+    Puzzle.prototype.loadStyles = function() {
+        var self = this,
+            holderHeight = self.$pieceMat.height(),
+            holderWidth = self.$pieceMat.width(),
+            winHeight = $(window).height(),
+            scaleW = holderWidth/self.image.width,
+            scaleH = holderHeight/self.image.height,
+            cssScale = Math.min(scaleW, scaleH),
+            invertedScale = 1 / cssScale
+            width = Math.floor(invertedScale) * 100;
+
+        self.invertedScale = invertedScale;
+        self.$pieceMat.css('transform', 'scale(' + parseFloat(cssScale).toFixed(2));
+        self.$pieceMat.css('width', width + '%');
+
     };
 
     Puzzle.prototype.imageLoaded = function () {
@@ -35,13 +71,8 @@ var Puzzle = (function () {
         self.pieceW = self.image.width / self.piecesX;
         self.pieceH = self.image.height / self.piecesY;
         self.loadPieces();
+        self.loadStyles();
 
-        self.$el.css({
-            'width': self.image.width,
-            'height': self.image.height,
-            'transformOrigin': 'top left',
-            'transform': 'scale(' + ($(window).width() / self.image.width) + ')'
-        });
         self.bindEvents();
     };
 
@@ -55,7 +86,6 @@ var Puzzle = (function () {
 
         self.initDraggable();
         $(window).on('click', function (ev) { 
-            console.log(ev.target);
             if ($(ev.target).is('.piece')) {
                 var $piece = $(ev.target);
                 $piece.addClass('active').siblings().removeClass('active');
@@ -124,10 +154,11 @@ var Puzzle = (function () {
                     top: fix(self.pieceH * y),
                     left: fix(self.pieceW * x),
                     image: self.image,
-                    container: self.$el
+                    container: self.$pieceMat
                 });
                 // piece.$canvas.css('max-width', (100/X_COUNT) + '%');
                 row.push(piece);
+                piece.$canvas.addClass('not-placed');
                 // break;
             }
             self.pieces.push(row);
