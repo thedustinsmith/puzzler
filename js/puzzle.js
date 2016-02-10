@@ -19,6 +19,9 @@ var Puzzle = (function () {
 
         self.$dropBoard = $(opts.dropBoard);
         self.$pieceMat = $(opts.pieceMat);
+
+        self.maxWidth = Math.floor($(window).width() * .6);
+        self.maxHeight = Math.floor($(window).height() * .75);
     }
 
     Puzzle.prototype.start = function () {
@@ -33,16 +36,41 @@ var Puzzle = (function () {
         var self = this,
             startX,
             startY;
-        this.$pieceMat.find('canvas').draggable({
+        this.$pieceMat.find('canvas')
+        // .each(function() {
+        //     var o = $(this).position();
+        //     $(this).css({
+        //         position: 'absolute',
+        //         top: o.top,
+        //         left: o.left
+        //     });
+        // })
+        .draggable({
+            scroll: true,
             start: function (ev, ui) {
-                startY = ui.position.top;
-                startX = ui.position.left;
             },
             drag: function (ev, ui) {
-                var diffX = ui.position.left - startX,
-                    diffY = ui.position.top - startY;
-                ui.position.top += (diffY * self.invertedScale);
-                ui.position.left += (diffX * self.invertedScale); //startX + (self.invertedScale*ui.offset.left);
+            }
+        });
+    };
+
+    Puzzle.prototype.initDroppable = function() {
+        var self = this,
+            maxW = self.maxWidth,
+            maxH = self.maxHeight,
+            scale = parseFloat(Math.min((maxW/self.image.width), (maxH/self.image.height))).toFixed(2),
+            h = (self.image.height * scale).toFixed(2),
+            w = (self.image.width * scale).toFixed(2);
+
+        self.$dropBoard.css({
+            width: w + 'px',
+            height: h + 'px'
+        })
+        self.$dropBoard.droppable({
+            drop: function (ev, ui) {
+                console.log(ui.position);
+                self.$dropBoard.removeClass('empty');
+                $(ui.draggable).detach().appendTo($(this));
             }
         });
     };
@@ -59,21 +87,83 @@ var Puzzle = (function () {
             width = Math.floor(invertedScale) * 100;
 
         self.invertedScale = invertedScale;
-        self.$pieceMat.css('transform', 'scale(' + parseFloat(cssScale).toFixed(2));
-        self.$pieceMat.css('width', width + '%');
-
+        // self.$pieceMat.css('transform', 'scale(' + parseFloat(cssScale).toFixed(2));
+        // self.$pieceMat.css('width', width + '%');
     };
 
     Puzzle.prototype.imageLoaded = function () {
         var self = this;
         self.piecesX = X_COUNT; //self.image.width / 10;
         self.piecesY = Y_COUNT; //self.image.height / 10;
+
+        if (self.image.width > self.maxWidth || self.image.height > self.maxHeight) {
+            var scale = Math.min((self.maxWidth / self.image.width), (self.maxHeight / self.image.height)),
+                w = self.image.width * scale,
+                h = self.image.height * scale,
+                canvas = document.createElement('canvas'),
+                ctx = canvas.getContext('2d');
+
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(self.image, 0, 0, w, h);
+            self.image = canvas;
+        }
+
         self.pieceW = self.image.width / self.piecesX;
         self.pieceH = self.image.height / self.piecesY;
+
         self.loadPieces();
         self.loadStyles();
 
         self.bindEvents();
+    };
+
+    Puzzle.prototype.initDragAndDrop = function () {
+        var self = this,
+            $body = $(document.body),
+            scale,
+            $dragging,
+            clickOffset,
+            start;
+
+        function mouseDown (ev) {
+            $dragging = $(ev.target);
+            if(!$dragging.is('.piece')) return;
+
+            scale = $dragging.data('scale');
+            $dragging.css('position', 'absolute');
+
+            var off = $dragging.offset();
+            clickOffset = {
+                top: ev.pageY - off.top,
+                left: ev.pageX - off.left
+            };
+            start = off;
+            $dragging.css({
+                top: off.top,
+                left: off.left
+            })
+
+            $body.on('mousemove.puzzle', mouseMove);
+            $body.on('mouseup.puzzle', mouseUp);
+            self.$dropBoard.on('mouseup.puzzle', dropperMouseUp);
+        }
+        function mouseUp (ev) {
+            $body.off('mousemove.puzzle');
+            $body.off('mouseUp.puzzle');
+        }
+        function dropperMouseUp(ev) { 
+            console.log('dropper dropped');
+        }
+        function mouseMove(ev) {
+            $dragging.css({
+                top: (ev.pageY - clickOffset.top) * scale,
+                left: (ev.pageX - clickOffset.left) * scale
+            });
+        }
+
+        self.$pieceMat.find('.piece').data('scale', self.invertedScale);
+        $body.on('mousedown.puzzle', mouseDown);
     };
 
     Puzzle.prototype.bindEvents = function () {
@@ -84,7 +174,10 @@ var Puzzle = (function () {
             ALLOWEDKEYS = [LEFT, UP, RIGHT, DOWN],
             self = this;
 
+        // self.initDragAndDrop();
+
         self.initDraggable();
+        self.initDroppable();
         $(window).on('click', function (ev) { 
             if ($(ev.target).is('.piece')) {
                 var $piece = $(ev.target);

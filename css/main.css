@@ -124,7 +124,21 @@ h1 {
 
 .puzzle-pieces .pp-inner {
     padding: 10%;
+    position: relative;
+    /*max-height: 100%;*/
+
+    /*overflow-y: auto;*/
+}
+.puzzle-empty {
+    display: none;
+}
+.puzzle-board.empty .puzzle-empty {
+    display: block;
+    pointer-events: none;
+}
+.puzzle-board .piece {
     transform-origin: top left;
+    position: absolute;
 }
 
 /*
