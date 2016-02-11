@@ -82,6 +82,17 @@ body {
     height: 75vh;
     position: relative;
 }
+.puzzle-empty {
+    display: none;
+}
+.puzzle-board.empty .puzzle-empty {
+    display: block;
+    pointer-events: none;
+}
+.puzzle-board .piece {
+    transform-origin: top left;
+    position: absolute;
+}
 
 .puzzle-empty {
     text-align: center;
@@ -100,15 +111,64 @@ h1 {
     margin: 0;
     font-size: 3em;
 }
-
+.puzzle-preview,
+.puzzle-actions {
+    float: left;
+}
+.puzzle-preview {
+    width: 100px;
+}
 .puzzle-preview h3 {
     margin: 0;
 }
-
-.puzzle-preview img {
-    max-height: 60px;
+.file-btn {
+    position: relative;
+}
+.file-btn input[type=file] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: 1;
+    cursor: pointer;
+}
+.btn {
+    background: linear-gradient(#448844, #316731);
+    padding: 15px 25px;
+    border-radius: 3px;
+    margin: 25px 0;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+    cursor: pointer;
 }
 
+.puzzle-preview img {
+    display: none;
+    transform-origin: top left;
+    transition: transform .5s linear;
+}
+.puzzle-preview img.expanded {
+    z-index: 100;
+    position: relative;
+    display: inline-block;
+}
+
+.puzzle-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity .2s linear;
+}
+.puzzle-overlay.active {
+    z-index: 99;
+    opacity: 1;
+}
 .puzzle-pieces {
     position: absolute;
     right: 0;
@@ -117,28 +177,24 @@ h1 {
     width: 35%;
     background: rgba(255 ,255, 255, 0.3);
 }
-
+.piece.not-placed {
+    transform-origin: top left;
+}
 .piece.active {
     outline: 1px solid #bada55;
 }
-
+.piece.dragging {
+    transform: scale(1) !important;
+}
 .puzzle-pieces .pp-inner {
     padding: 10%;
     position: relative;
+    width: 100%;
+    height: 100%;
+    transform-origin: top left;
     /*max-height: 100%;*/
 
     /*overflow-y: auto;*/
-}
-.puzzle-empty {
-    display: none;
-}
-.puzzle-board.empty .puzzle-empty {
-    display: block;
-    pointer-events: none;
-}
-.puzzle-board .piece {
-    transform-origin: top left;
-    position: absolute;
 }
 
 /*

@@ -8,6 +8,7 @@ var Puzzle = (function () {
     var BOARD = '<div class="puzzle-board" />',
         MAT = '<div class="puzzle-mat" />';
 
+    var $win = $(window);
     function fix(v, decimal) {
         return parseFloat(v).toFixed(decimal || 2);
     }
@@ -19,18 +20,41 @@ var Puzzle = (function () {
 
         self.$dropBoard = $(opts.dropBoard);
         self.$pieceMat = $(opts.pieceMat);
+        self.$overlay = $('.puzzle-overlay');
+        self.$preview = $('.puzzle-preview img');
 
-        self.maxWidth = Math.floor($(window).width() * .6);
-        self.maxHeight = Math.floor($(window).height() * .75);
-    }
+        self.maxWidth = Math.floor($win.width() * .6);
+        self.maxHeight = Math.floor($win.height() * .75);
+        self.initUpload();
+    };
 
     Puzzle.prototype.start = function () {
+        this.bindImage(this.url);
+    };
+
+    Puzzle.prototype.bindImage = function (url) {
         var self = this;
-        self.image = new Image;
+        self.url = url;
+        self.image = self.originalImage = new Image;
         self.image.onload = self.imageLoaded.bind(self);
         self.image.src = self.url;
     };
 
+    Puzzle.prototype.initUpload = function () {
+        var self = this;
+        $('input[type=file]').on('change', function () {
+            var input = this;
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function (e) {
+                    self.bindImage(e.target.result);
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    };
 
     Puzzle.prototype.initDraggable = function () { 
         var self = this,
@@ -48,8 +72,12 @@ var Puzzle = (function () {
         .draggable({
             scroll: true,
             start: function (ev, ui) {
+                $(ev.target).addClass('dragging');
             },
             drag: function (ev, ui) {
+            },
+            stop: function (ev, ui) {
+                $(ev.target).removeClass('dragging');
             }
         });
     };
@@ -68,9 +96,17 @@ var Puzzle = (function () {
         })
         self.$dropBoard.droppable({
             drop: function (ev, ui) {
-                console.log(ui.position);
+                var $drag = $(ui.draggable).detach().appendTo($(this));
                 self.$dropBoard.removeClass('empty');
-                $(ui.draggable).detach().appendTo($(this));
+                if ($drag.is('.not-placed')) {
+                    var dOff = self.$dropBoard.offset();
+                    $drag.removeClass('not-placed').css({
+                        top: ui.offset.top - dOff.top,
+                        left: ui.offset.left - dOff.left,
+                        transform: '',
+                        position: 'absolute'
+                    });
+                }
             }
         });
     };
@@ -79,15 +115,43 @@ var Puzzle = (function () {
         var self = this,
             holderHeight = self.$pieceMat.height(),
             holderWidth = self.$pieceMat.width(),
-            winHeight = $(window).height(),
+            winHeight = $win.height(),
             scaleW = holderWidth/self.image.width,
             scaleH = holderHeight/self.image.height,
             cssScale = Math.min(scaleW, scaleH),
             invertedScale = 1 / cssScale
-            width = Math.floor(invertedScale) * 100;
+            width = Math.floor(invertedScale) * 100,
+            cssVal = parseFloat(cssScale).toFixed(2),
+            halfVal = (cssVal / 2) * 100,
+            transform = 'scale(' + cssVal + ') translate(-' + halfVal + '%, -' + halfVal + '%)';
 
-        self.invertedScale = invertedScale;
-        // self.$pieceMat.css('transform', 'scale(' + parseFloat(cssScale).toFixed(2));
+        var maxDim = Math.max(self.originalImage.width, self.originalImage.height),
+            maxDimScale = $win.height() / maxDim,
+            invertedMaxDimScale = 1/maxDimScale,
+            $pieces = self.$pieceMat.find('.piece');
+
+        // self.$pieceMat.find('.piece').data('scale', invertedScale);
+        // self.$pieceMat.css({
+        //     'transform': 'scale(' + maxDimScale + ')',
+        //     'width': self.$pieceMat.width() * invertedMaxDimScale
+        // });
+
+        $pieces.each(function () {
+            var o = $(this).position();
+            $(this).data('pos', o);
+        });
+
+
+        $pieces.each(function () {
+            var o = $(this).data('pos');
+            $(this).css({
+                position: 'absolute',
+                top: o.top,
+                left: o.left
+            })
+        });
+
+        // self.$pieceMat.find('.piece').css('transform', transform);
         // self.$pieceMat.css('width', width + '%');
     };
 
@@ -114,8 +178,22 @@ var Puzzle = (function () {
 
         self.loadPieces();
         self.loadStyles();
+        self.updatePreview();
 
         self.bindEvents();
+    };
+
+    Puzzle.prototype.updatePreview = function () { 
+        var self = this,
+            smallScale = 60 / self.originalImage.height,
+            maxW = Math.min($win.width() / 2, self.originalImage.width),
+            largeScale = maxW / self.originalImage.width;
+
+        self.$preview.data('smallScale', smallScale.toFixed(2))
+            .data('largeScale', largeScale.toFixed(2))
+            .show()
+            .css('transform', 'scale(' + smallScale.toFixed(2) + ')')
+            .attr('src', this.originalImage.src);
     };
 
     Puzzle.prototype.initDragAndDrop = function () {
@@ -162,56 +240,95 @@ var Puzzle = (function () {
             });
         }
 
-        self.$pieceMat.find('.piece').data('scale', self.invertedScale);
         $body.on('mousedown.puzzle', mouseDown);
     };
 
     Puzzle.prototype.bindEvents = function () {
+        var self = this;
+
+        self.initDraggable();
+        self.initDroppable();
+        $win.on('click', self.puzzleClick);
+        $win.on('keydown', self.keyDown);
+        self.$preview.on('click', self.togglePreview.bind(this));
+        self.$overlay.on('click', function () {
+            self.toggleOverlay(false);
+        });
+    };
+
+    Puzzle.prototype.toggleOverlay = function(tog, text) {
+        this.$overlay.toggleClass('active');
+        this.$overlay.find('span').text(text);
+        if (this.$preview.is('.expanded')) {
+            this.togglePreview(false);
+        }
+    };
+
+    Puzzle.prototype.togglePreview = function (ev) {
+        var self = this,
+            $img = self.$preview,
+            isShown = $img.is('.expanded'),
+            ls = $img.data('largeScale'),
+            ss = $img.data('smallScale'),
+            translate = '';
+
+        console.log(isShown);
+        if (!isShown) {
+            this.toggleOverlay(true, '');
+            var x = ($win.width() - (self.originalImage.width * ls)) / 2,
+                y = -$img.offset().top + (($win.height() - (self.originalImage.height * ls)) / 2);
+            translate = 'translate(' + x + 'px,' + y + 'px) ';
+        }
+        else if (ev !== false && isShown) {
+            this.toggleOverlay(false);
+            return;
+        }
+
+        $img.css('transform', translate + 'scale(' + (isShown ? ss : ls) + ')');
+        $img.toggleClass('expanded');
+    };
+
+    Puzzle.prototype.puzzleClick = function (ev) {
+        if ($(ev.target).is('.piece')) {
+            var $piece = $(ev.target);
+            $piece.addClass('active').siblings().removeClass('active');
+        }
+        else {
+            $('.piece.active').removeClass('active');
+        }
+    };
+
+    Puzzle.prototype.keyDown = function (ev) {
         var LEFT = 37,
             UP = 38,
             RIGHT = 39,
             DOWN = 40,
-            ALLOWEDKEYS = [LEFT, UP, RIGHT, DOWN],
-            self = this;
+            ALLOWEDKEYS = [LEFT, UP, RIGHT, DOWN]
+            key = ev.which,
+            $active = $('.piece.active');
 
-        // self.initDragAndDrop();
+        if (!$active.length) return;
+        if (ALLOWEDKEYS.indexOf(key) > -1) ev.preventDefault();
 
-        self.initDraggable();
-        self.initDroppable();
-        $(window).on('click', function (ev) { 
-            if ($(ev.target).is('.piece')) {
-                var $piece = $(ev.target);
-                $piece.addClass('active').siblings().removeClass('active');
-            }
-            else {
-                $('.piece.active').removeClass('active');
-            }
-        });
-        $(window).on('keydown', function (ev) {
-            var key = ev.which,
-                $active = self.$el.find('.piece.active');
-
-            if (!$active.length) return;
-            if (ALLOWEDKEYS.indexOf(key) > -1) ev.preventDefault();
-
-            if (key === LEFT) {
-                $active.css('left', (parseInt($active.css('left'), 10) || 0) - 1);
-            }
-            if (key === RIGHT) {
-                $active.css('left', (parseInt($active.css('left'), 10) || 0) + 1);
-            }
-            if (key === UP) {
-                $active.css('top', (parseInt($active.css('top'), 10) || 0) - 1);
-            }
-            if (key === DOWN) {
-                $active.css('top', (parseInt($active.css('top'), 10) || 0) + 1);
-            }
-        });
+        if (key === LEFT) {
+            $active.css('left', (parseInt($active.css('left'), 10) || 0) - 1);
+        }
+        if (key === RIGHT) {
+            $active.css('left', (parseInt($active.css('left'), 10) || 0) + 1);
+        }
+        if (key === UP) {
+            $active.css('top', (parseInt($active.css('top'), 10) || 0) - 1);
+        }
+        if (key === DOWN) {
+            $active.css('top', (parseInt($active.css('top'), 10) || 0) + 1);
+        }
     }
 
     Puzzle.prototype.loadPieces = function () {
         var self = this;
         self.pieces = [];
+        self.$pieceMat.html('');
+        self.$dropBoard.find('.piece').remove();
 
         for (var y = 0; y < self.piecesY; y++) {
             var row = [],
