@@ -75,6 +75,7 @@ body {
     background-color: rgba(49, 103, 49, 0.77);
     color: #eee;
     padding-left: 15px;
+    overflow: hidden;
 }
 .puzzle-board {
     width: 60%;
@@ -141,6 +142,8 @@ h1 {
     margin: 25px 0;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
     cursor: pointer;
+    border: 0;
+    display: inline-block;
 }
 
 .puzzle-preview img {
@@ -185,6 +188,7 @@ h1 {
 }
 .piece.dragging {
     transform: scale(1) !important;
+    z-index: 9999;
 }
 .puzzle-pieces .pp-inner {
     padding: 10%;
