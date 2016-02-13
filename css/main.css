@@ -77,6 +77,9 @@ body {
     padding-left: 15px;
     overflow: hidden;
 }
+a {
+    color: #eee;
+}
 .puzzle-board {
     width: 60%;
     border: 1px solid rgba(255, 255, 255, 0.3);

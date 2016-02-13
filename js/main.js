@@ -1,5 +1,6 @@
 var Main = (function () {
-    var puzzle;
+    var IMG_COUNT = 6,
+        puzzle;
 
     function bindUpload () {
         $('input[type=file]').on('change', function () {
@@ -32,11 +33,18 @@ var Main = (function () {
     };
 
     function init () {
+        var imgIx = 1;
         bindUpload();
-        initPuzzle('http://i.imgur.com/7L7KwSh.jpg');
+        initPuzzle('/img/' + imgIx + '.jpg');
 
         $('.cheat-btn').on('click', function () {
             puzzle.cheat();
+        });
+        $('.next-btn').on('click', function (ev) {
+            if (++imgIx > IMG_COUNT) {
+                imgIx = 1;
+            }
+            initPuzzle('/img/' + imgIx + '.jpg');
         });
     }
     
