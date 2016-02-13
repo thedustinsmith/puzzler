@@ -1,6 +1,5 @@
 var PuzzlePiece = (function () {
-    var ARC_INSET = .4,
-        ARC_RADIUS = .1;
+    var ARC_RADIUS = .2;
 
     var Piece = function (opts) { 
         var self = this;
@@ -51,15 +50,12 @@ var PuzzlePiece = (function () {
             L = self.leftEdge,
             xR = self.xRadius,
             yR = self.yRadius,
-            xStart = L === 1 ? xR : 0, //0 : ARC_RADIUS * w,
-            yStart = T === 1 ? yR : 0, // : ARC_RADIUS * h,
-            xEnd = R === 1 ? w - xR : w, //: , //w : (1 - ARC_RADIUS) * w,
+            xStart = L === 1 ? xR : 0,
+            yStart = T === 1 ? yR : 0,
+            xEnd = R === 1 ? w - xR : w,
             yEnd = B === 1 ? h - yR : h,
             xInset = ((xEnd - xStart) / 2) - yR,
             yInset = ((yEnd - yStart) / 2) - xR;
-            // yInset = ((h-yStart) / 2) - xR, // - yStart, //ARC_INSET * h,
-            // xInset = ((h-yStart) / 2) - xR, // - yStart, //ARC_INSET * h,
-            //; // - yR; // ? h : (1 - ARC_RADIUS) * h;
 
         var $can = $(this.canvas);
         $can.attr({
