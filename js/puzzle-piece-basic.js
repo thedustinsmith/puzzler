@@ -1,5 +1,5 @@
 var PuzzlePiece = (function () {
-    var ARC_RADIUS = .2;
+    var ARC_RADIUS = .15;
 
     var Piece = function (opts) { 
         var self = this;
