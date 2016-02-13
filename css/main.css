@@ -150,6 +150,7 @@ h1 {
 }
 
 .puzzle-preview img {
+    cursor: pointer;
     display: none;
     transform-origin: top left;
     transition: transform .5s linear;
